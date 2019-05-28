@@ -27,13 +27,13 @@ public class CountdownLabel: LTMorphingLabel {
     public typealias CountdownCompletion = () -> ()?
     public typealias CountdownExecution = () -> ()
     internal let defaultFireInterval = 1.0
-    internal let date1970 = NSDate(timeIntervalSince1970: 0)
+    internal let date1970 = Date(timeIntervalSince1970: 0)
     
     // conputed property
     public var dateFormatter: DateFormatter {
         let df = DateFormatter()
         df.locale = Locale(identifier: "en_US_POSIX")
-        df.timeZone = NSTimeZone(name: "GMT") as TimeZone!
+        df.timeZone = TimeZone(identifier: "GMT")!
         df.dateFormat = timeFormat
         return df
     }
@@ -81,12 +81,12 @@ public class CountdownLabel: LTMorphingLabel {
     }
     
     internal var completion: CountdownCompletion?
-    internal var fromDate: NSDate = NSDate()
-    internal var currentDate: NSDate = NSDate()
+    internal var fromDate = Date()
+    internal var currentDate = Date()
     internal var currentTime: TimeInterval = 0
-    internal var diffDate: NSDate!
+    internal var diffDate: Date!
     internal var targetTime: TimeInterval = 0
-    internal var pausedDate: NSDate!
+    internal var pausedDate: Date!
     internal var range: NSRange!
     internal var timer: Timer!
     
@@ -120,12 +120,12 @@ public class CountdownLabel: LTMorphingLabel {
         setCountDownTime(minutes: minutes)
     }
     
-    public convenience init(frame: CGRect, date: NSDate) {
+    public convenience init(frame: CGRect, date: Date) {
         self.init(frame: frame)
         setCountDownDate(targetDate: date)
     }
     
-    public convenience init(frame: CGRect, fromDate: NSDate, targetDate: NSDate) {
+    public convenience init(frame: CGRect, fromDate: Date, targetDate: Date) {
         self.init(frame: frame)
         setCountDownDate(fromDate: fromDate, targetDate: targetDate)
     }
@@ -136,10 +136,10 @@ public class CountdownLabel: LTMorphingLabel {
     
     // MARK: - Setter Methods
     public func setCountDownTime(minutes: TimeInterval) {
-        setCountDownTime(fromDate: NSDate(), minutes: minutes)
+        setCountDownTime(fromDate: Date(), minutes: minutes)
     }
     
-    public func setCountDownTime(fromDate: NSDate, minutes: TimeInterval) {
+    public func setCountDownTime(fromDate: Date, minutes: TimeInterval) {
         self.fromDate = fromDate
         
         targetTime = minutes
@@ -149,11 +149,11 @@ public class CountdownLabel: LTMorphingLabel {
         updateLabel()
     }
     
-    public func setCountDownDate(targetDate: NSDate) {
-        setCountDownDate(fromDate: NSDate(), targetDate: targetDate)
+    public func setCountDownDate(targetDate: Date) {
+        setCountDownDate(fromDate: Date(), targetDate: targetDate)
     }
     
-    public func setCountDownDate(fromDate: NSDate, targetDate: NSDate) {
+    public func setCountDownDate(fromDate: Date, targetDate: Date) {
         self.fromDate = fromDate
         
         targetTime = targetDate.timeIntervalSince(fromDate as Date)
@@ -194,7 +194,7 @@ extension CountdownLabel {
     public func start(completion: ( () -> () )? = nil) {
         if !isPaused {
             // current date should be setted at the time of the counter's starting, or the time will be wrong (just a few seconds) after the first time of pausing.
-            currentDate = NSDate()
+            currentDate = Date()
         }
         
         // pause status check
@@ -226,7 +226,7 @@ extension CountdownLabel {
         paused = true
         
         // reset
-        pausedDate = NSDate()
+        pausedDate = Date()
         
         // set completion if needed
         completion?()
@@ -314,6 +314,9 @@ extension CountdownLabel {
         if let second = comp.second ,let _ = timeFormat.range(of: "ss"){
             labelText = labelText.replacingOccurrences(of: "ss", with: String.init(format: "%02ld", second))
         }
+        if let second = comp.second ,let _ = timeFormat.range(of: "s"){
+            labelText = labelText.replacingOccurrences(of: "s", with: String.init(format: "%01ld", second))
+        }
         return labelText
     }
     
@@ -323,7 +326,7 @@ extension CountdownLabel {
         }
         // change date
         let pastedTime = pausedDate.timeIntervalSince(currentDate as Date)
-        currentDate = NSDate().addingTimeInterval(-pastedTime)
+        currentDate = Date().addingTimeInterval(-pastedTime)
         fromDate = currentDate
         
         // reset pause
@@ -342,7 +345,7 @@ extension CountdownLabel {
                                                        repeats: true)
         
         // register to NSrunloop
-        RunLoop.current.add(timer, forMode: RunLoop.Mode.common)
+        RunLoop.current.add(timer, forMode: .common)
         counting = true
     }
     
@@ -389,7 +392,7 @@ public enum CountdownEffect {
     }
 }
 
-public class CountdownAttributedText: NSObject {
+public class CountdownAttributedText {
     internal let text: String
     internal let replacement: String
     internal let attributes: [NSAttributedString.Key: Any]?
